@@ -1,0 +1,397 @@
+---
+title: "HW1"
+author: "Yuri Lee, Seunghoon Choi"
+date: '2021 2 7 '
+output: pdf_document
+---
+
+# 1-1
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+GasPrices = read.csv('C:/Users/CHOI/Desktop/GasPrices.csv')
+```
+## A. Competition & Price
+```{r}
+ggplot(data=GasPrices) +
+  geom_boxplot(aes(x = Competitors, y=Price))
+```
+The bar plot above shows the gas price of gas providers which have competitors is lower than the price of the providers which do not have competitors.
+
+```{r}
+ggplot(data=GasPrices) +
+  geom_boxplot(aes(x = Competitors, y=Price)) +
+  facet_wrap(~Name, nrow=2)
+```
+However, it would be hard to generalize the relation between the price and the existence of competitors for all providers. Only three providers shows lower price when they have competitors than without-competitors cases among the eight eligible cases out of twenty, whose with-competitor prices and without-copetitors prices can be compared.
+
+## B. Income & Price
+```{r}
+ggplot(data=GasPrices) +
+  geom_point(mapping = aes(x=Income, y=Price))
+```
+We can see upward shape of dots in this graph, which means the gas prices and income of the area where the gas station is located have a positive relation.
+
+```{r}
+ggplot(data=GasPrices) +
+  geom_point(mapping = aes(x=Income, y=Price)) +
+  facet_wrap(~Name, nrow=4)
+```
+On the graph of each company, several companies such as 7-Eleven, Exxon, of Shell represent these positive relation obviously. On the contrary, we can see that some companies like Costco sticks to one-price polices.  
+
+## C. Price of Shell vs Other sellers
+```{r}
+GasPrices = GasPrices %>%
+  mutate(class = ifelse(Name == 'Shell', 'Shell', 'others'))
+
+d1 = GasPrices %>%
+  group_by(class) %>%
+  summarise(mean_price = mean(Price))
+d1
+
+ggplot(data=d1) +
+  geom_col(mapping=aes(x=class, y=mean_price), position = 'dodge')
+```
+The average gas price of Shell($1.88) is a little bit higher than that of other providers($1.86).
+
+```{r}
+d2 = GasPrices %>%
+  group_by(Name) %>%
+  summarise(mean_price = mean(Price))
+d2
+
+ggplot(data=d2) +
+  geom_col(mapping=aes(x=Name, y=mean_price), position = 'dodge')
+```
+The 12 out of 19 providers have lower average gas prices than that of Shell.
+
+## D. stoplights' effects on Price
+```{r}
+ggplot(data = GasPrices) +
+  geom_histogram(aes(x=Price)) +
+  facet_wrap(~ Stoplight)
+```
+Gas stations nearby stoplights generally have higher gas prices. Prices of gas stations without stoplight nearby(the left graph) are concentrated around 1.8, while gas stations near stoplight have a lot of prices around 1.8~1.9.
+
+## E. The effect of Highway access on Price
+```{r}
+d3 = GasPrices %>%
+  group_by(Highway) %>%
+  summarise(mean_price = mean(Price))
+d3
+
+ggplot(data=d3) +
+  geom_col(mapping = aes(x=Highway, y=mean_price))
+```
+Gas stations which is accessible to highways tend to set gas prices higher than gas stations which is far from highways.
+
+```{r}
+d4 = GasPrices %>%
+  group_by(Highway, Name) %>%
+  summarize(mean_price = mean(Price))
+d4
+
+ggplot(data = d4) +
+  geom_col(mapping = aes(x = Name,y = mean_price, 
+                         fill=Highway), position = 'dodge') +
+  facet_wrap(~Name, nrow=4)
+
+ggplot(data=GasPrices) +
+  geom_boxplot(aes(x = Highway, y=Price)) +
+  facet_wrap(~Name, nrow=2)
+```
+These plots show that companies usually set higher gas price for the gas stations which are highway accessible.
+
+
+# 1-2
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+bikeshare = read.csv('C:/Users/CHOI/Desktop/bikeshare.csv')
+```
+
+## plot A
+```{r}
+bikeshare_a = bikeshare %>%
+  group_by(hr) %>%
+  summarise(average_rental=mean(total))
+
+head(bikeshare_a)
+
+ggplot(data=bikeshare_a) +
+  geom_line(aes(x=hr, y=average_rental)) +
+  scale_x_continuous(breaks=0:23) + 
+  labs(title="average bike rentals per hour", caption="Most used during rush hour(8:00, 17:00)")
+```
+
+## plot B
+```{r}
+bikeshare_b = bikeshare %>% 
+  mutate(work = ifelse(workingday==1, "working", "dayoff")) %>% 
+  group_by(hr, work) %>%
+  summarise(average_rental=mean(total))
+
+head(bikeshare_b)
+
+ggplot(data=bikeshare_b) +
+  geom_line(aes(x=hr, y=average_rental)) + facet_wrap(~work) + 
+  scale_x_continuous(breaks=0:23) + 
+  labs(title="average bike rentals per hour: working or not", 
+       caption="In working day, most used during rush hour(8:00, 17:00). But in day off, most used in afternoon")
+```
+
+## plot C
+```{r}
+bikeshare_c = bikeshare %>%
+  filter(hr==8) %>%
+  mutate(work = ifelse(workingday==1, "working", "dayoff")) %>% 
+  group_by(weathersit, work) %>%
+  summarise(average_rental=mean(total))
+
+ggplot(data=bikeshare_c) +
+  geom_col(aes(x=factor(weathersit), y=average_rental)) + 
+  facet_wrap(~work) + 
+  labs(title="average bike rentals at 8:00 under weather situation: working or not", 
+       caption="The difference in rental depending on the weather is 'working-day' greater than 'day-off'")
+
+```
+
+
+# 1-3
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+ABIA = read.csv('C:/Users/CHOI/Desktop/ABIA.csv')
+
+head(ABIA)
+```
+
+## Which day of a week is the worst departure/arrival(long delay) in Austin?
+
+### Departure Delay
+```{r}
+d1 = ABIA %>%
+  filter(Origin == 'AUS') %>%
+  filter(!is.na(DepDelay)) %>%
+  group_by(DayOfWeek) %>%
+  summarise(mean_depdelay = mean(DepDelay))
+d1
+
+ggplot(data=d1) +
+  geom_col(aes(x=DayOfWeek, y=mean_depdelay), position = 'dodge')
+```
+If you leave from Austin by airplane, Wednesday is the best choice, which you can minimize your departure delay, the average departure delay is around 5 minutes, while Friday gives the longest delay.  
+
+```{r}
+d2 = ABIA %>%
+  filter(Origin == 'AUS') %>%
+  filter(!is.na(DepDelay)) %>%
+  group_by(DayOfWeek, UniqueCarrier) %>%
+  summarise(mean_depdelay = mean(DepDelay))
+d2
+
+ggplot(data=d2) +
+  geom_col(aes(x=DayOfWeek, y=mean_depdelay), position = 'dodge') +
+  facet_wrap(~UniqueCarrier)
+```
+However, each airline has different delay pattern by day of week. So, if you plan airline trip, you might need to consider which day of week is best and worst for your airline.
+
+### Arrival Delay
+```{r}
+d3 = ABIA %>%
+  filter(Dest=='AUS') %>%
+  filter(!is.na(ArrDelay)) %>%
+  group_by(DayOfWeek) %>%
+  summarise(mean_ArrDelay = mean(ArrDelay))
+d3
+
+ggplot(data=d3) +
+  geom_col(aes(x=DayOfWeek, y=mean_ArrDelay), position = 'dodge')
+```
+The arrival delay is also the longest on Friday like the departure delay in Austin.
+
+```{r}
+d4 = ABIA %>%
+  filter(Dest=='AUS') %>%
+  filter(!is.na(ArrDelay)) %>%
+  group_by(DayOfWeek, UniqueCarrier) %>%
+  summarise(mean_ArrDelay = mean(ArrDelay))
+d4
+
+ggplot(data=d4) +
+  geom_col(aes(x=DayOfWeek, y=mean_ArrDelay), position = 'dodge') +
+  facet_wrap(~UniqueCarrier)
+```
+Each airline has different shape of arrival delay by day of week. The interesting thing is NW airline shows high peak in departure and arrival delay in the middle of week, while US airline has very low, and stable delay.
+
+
+# 1-4
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(rsample) 
+library(caret)
+library(modelr)
+library(parallel)
+library(foreach)
+
+sclass = read.csv('C:/Users/CHOI/Desktop/sclass.csv')
+```
+
+## To separate data set and make training/testing set
+```{r}
+sclass %>%
+  filter(trim=="350" | trim=="65 AMG")  %>%
+  select(trim, mileage, price)
+
+s3 = subset(sclass, trim=="350")
+s6 = subset(sclass, trim=="65 AMG")
+
+plot(price ~ mileage, data = s3)
+plot(price ~ mileage, data = s6)
+
+s3_split = initial_split(s3, prop=0.8)
+s3_train = training(s3_split)
+s3_test = testing(s3_split)
+
+s6_split = initial_split(s6, prop=0.8)
+s6_train = training(s6_split)
+s6_test = testing(s6_split)
+```
+
+## 350 trim of sclass
+
+### k=2,5,10,15,20,25,50,100 
+```{r}
+s3_knn2 = knnreg(price ~ mileage, data=s3_train, k=2)
+s3_knn5 = knnreg(price ~ mileage, data=s3_train, k=5)
+s3_knn10 = knnreg(price ~ mileage, data=s3_train, k=10)
+s3_knn15 = knnreg(price ~ mileage, data=s3_train, k=15)
+s3_knn20 = knnreg(price ~ mileage, data=s3_train, k=20)
+s3_knn25 = knnreg(price ~ mileage, data=s3_train, k=25)
+s3_knn50 = knnreg(price ~ mileage, data=s3_train, k=50)
+s3_knn100 = knnreg(price ~ mileage, data=s3_train, k=100)
+
+s3_test = s3_test %>%
+  mutate(price_pred = predict(s3_knn2, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn5, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn10, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn15, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn20, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn25, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn50, s3_test)) %>%
+  mutate(price_pred = predict(s3_knn100, s3_test)) 
+```
+  
+### Calculating RMSE
+```{r}
+modelr::rmse(s3_knn2, s3_test)
+modelr::rmse(s3_knn5, s3_test)
+modelr::rmse(s3_knn10, s3_test)
+modelr::rmse(s3_knn15, s3_test)
+modelr::rmse(s3_knn20, s3_test)
+modelr::rmse(s3_knn25, s3_test)
+modelr::rmse(s3_knn50, s3_test)
+modelr::rmse(s3_knn100, s3_test)
+```
+When k=15, RMSE minimized
+
+
+## 65 AMG trim of sclass
+
+### k=2,5,10,15,20,25,50,100
+```{r}
+s6_knn2 = knnreg(price ~ mileage, data=s6_train, k=2)
+s6_knn5 = knnreg(price ~ mileage, data=s6_train, k=5)
+s6_knn10 = knnreg(price ~ mileage, data=s6_train, k=10)
+s6_knn15 = knnreg(price ~ mileage, data=s6_train, k=15)
+s6_knn20 = knnreg(price ~ mileage, data=s6_train, k=20)
+s6_knn25 = knnreg(price ~ mileage, data=s6_train, k=25)
+s6_knn50 = knnreg(price ~ mileage, data=s6_train, k=50)
+s6_knn100 = knnreg(price ~ mileage, data=s6_train, k=100)
+
+s6_test = s6_test %>%
+  mutate(price_pred = predict(s6_knn2, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn5, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn10, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn15, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn20, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn25, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn50, s6_test)) %>%
+  mutate(price_pred = predict(s6_knn100, s6_test))
+```
+
+### Calculating RMSE
+```{r}
+modelr::rmse(s6_knn2, s6_test)
+modelr::rmse(s6_knn5, s6_test)
+modelr::rmse(s6_knn10, s6_test)
+modelr::rmse(s6_knn15, s6_test)
+modelr::rmse(s6_knn20, s6_test)
+modelr::rmse(s6_knn25, s6_test)
+modelr::rmse(s6_knn50, s6_test)
+modelr::rmse(s6_knn100, s6_test)
+```
+When k=20, RMSE minimized
+
+
+## K vs RMSE
+
+### 350 trim of sclass
+```{r}
+k_grid = c(2,5,10,15,20,25,50,100)
+
+s3_RMSE = foreach(k=k_grid, .combine='c') %do% {
+  s3_knn_model = knnreg(price~mileage, data=s3_train, k=k)
+  modelr::rmse(s3_knn_model, s3_test)}
+
+ggplot() + 
+  geom_line(aes(x = k_grid, y = s3_RMSE), color='red', size=1.5)
+```  
+
+### 65 AMG trim of sclass
+```{r}
+k_grid = c(2,5,10,15,20,25,50,100)
+
+s6_RMSE = foreach(k=k_grid, .combine='c') %do% {
+  s6_knn_model = knnreg(price~mileage, data=s6_train, k=k)
+  modelr::rmse(s6_knn_model, s6_test)}
+
+ggplot() + 
+  geom_line(aes(x = k_grid, y = s6_RMSE), color='blue', size=1.5)
+```
+
+## plot 2 models
+
+### 350 trim with K = 15
+```{r}
+s3_knn15_plot = knnreg(price ~ mileage, data=s3_train, k=15)
+s3_test = s3_test %>%
+  mutate(price_pred = predict(s3_knn15_plot, s3_test))
+modelr::rmse(s3_knn15_plot, s3_test)
+
+s3_plot = ggplot(data = s3_test) + 
+  geom_point(mapping = aes(x = mileage, y = price), alpha=0.2) + 
+  geom_line(aes(x = mileage, y = price_pred), color='red', size=1.5)
+
+s3_plot
+```
+
+### 65 AMG trim with K = 20
+```{r}
+s6_knn20_plot = knnreg(price ~ mileage, data=s6_train, k=20)
+s6_test = s6_test %>%
+  mutate(price_pred = predict(s6_knn20_plot, s6_test))
+modelr::rmse(s6_knn20_plot, s6_test)
+
+s6_plot = ggplot(data = s6_test) + 
+  geom_point(mapping = aes(x = mileage, y = price), alpha=0.2) + 
+  geom_line(aes(x = mileage, y = price_pred), color='blue', size=1.5)
+
+s6_plot
+```
+
+RMSE of '350 trim' is smaller than '65 AMG Trim' in optimal 'K'. So, '350 trim' yields a larger optimal value of 'K'
