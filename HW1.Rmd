@@ -24,7 +24,7 @@ ggplot(data=GasPrices) +
   geom_boxplot(aes(x = Competitors, y=Price)) +
   facet_wrap(~Name, nrow=2)
 ```
-However, it would be hard to generalize the relation between the price and the existence of competitors for all providers. Only three providers shows lower price when they have competitors than without-competitors cases among the eight eligible cases out of twenty, whose with-competitor prices and without-copetitors prices can be compared.
+However, it would be hard to generalize the relation between the price and the existence of competitors for all providers. Only three providers shows lower price when they have competitors than without-competitors cases among the eight eligible cases out of twenty, whose with-competitor prices and without-competitors prices can be compared.
 
 ## B. Income & Price
 ```{r}
@@ -62,7 +62,7 @@ d2 = GasPrices %>%
 d2
 
 ggplot(data=d2) +
-  geom_col(mapping=aes(x=Name, y=mean_price), position = 'dodge')
+  geom_col(mapping=aes(x=mean_price, y=Name), position = 'dodge')
 ```
 The 12 out of 19 providers have lower average gas prices than that of Shell.
 
